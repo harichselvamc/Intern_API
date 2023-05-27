@@ -6,24 +6,14 @@ import json
 import requests
 
 # Font URL from Google Fonts
-font_url = "https://fonts.googleapis.com/css2?family=Roboto"
-
-# Function to download font file from Google Fonts
-def download_font(font_url):
-    response = requests.get(font_url)
-    with open("font.ttf", "wb") as f:
-        f.write(response.content)
-
-# Download the font file
-download_font(font_url)
+font_path = "font.ttf"
 
 def add_image_name_overlay(image, image_name, font_size, position):
     img = Image.open(io.BytesIO(image))
     overlay = Image.new('RGBA', img.size)
     text = image_name
 
-    # Load the downloaded font file
-    font_path = "font.ttf"
+    # Load the font file
     font = ImageFont.truetype(font_path, font_size)
 
     text_color = (255, 255, 255, 128)  # RGBA format, adjust the color as needed
