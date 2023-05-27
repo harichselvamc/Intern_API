@@ -3,6 +3,8 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 import json
+font_path = "/path/to/arial.ttf" 
+
 
 def add_image_name_overlay(image, image_name, font_size, position):
     
@@ -10,10 +12,10 @@ def add_image_name_overlay(image, image_name, font_size, position):
 
   
     overlay = Image.new('RGBA', img.size)
-
-
+    
     text = image_name
-    font = ImageFont.truetype('arial.ttf', font_size)
+    font = ImageFont.truetype(font_path, font_size)
+
     text_color = (255, 255, 255, 128)  # RGBA format, adjust the color as needed
 
 
