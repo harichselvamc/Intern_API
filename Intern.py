@@ -16,7 +16,7 @@ def add_image_overlay(images, image_data_list):
         font_size = image_data['font_size']
         position = image_data['position']
         text_color = image_data['text_color']
-        font = ImageFont.truetype('arial.ttf', font_size)
+        font = ImageFont.truetype('./arial.ttf', font_size)
 
         if position == 'bottom-left':
             x = 10
@@ -44,16 +44,12 @@ def resize_image(image, size):
 
 
 def store_json_data(json_data):
-    with open('history.json', 'a') as file:
-        file.write(json_data + '\n')
+    # Retrieve existing data from Streamlit's user session state
+    existing_data = st.session_state.get('json_data', [])
+    existing_data.append(json_data)
 
-
-def load_json_data():
-    data = []
-    with open('history.json', 'r') as file:
-        for line in file:
-            data.append(json.loads(line))
-    return data
+    # Update the user session state with the new data
+    st.session_state['json_data'] = existing_data
 
 
 def save_to_history(data):
@@ -71,31 +67,30 @@ def save_to_history(data):
         'altered_size': altered_size
     }
 
-    store_json_data(json.dumps(image_data))
+    store_json_data(image_data)
     return {"message": "Data saved to history.json"}
+
+
+def fetch_data_from_website():
+    url = 'https://intern-omam.onrender.com/'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data
+    else:
+        st.error('Failed to fetch data from the website')
+        return None
 
 
 def main():
     st.title('Image Overlay API')
 
-    uploaded_files = st.file_uploader('Upload images', type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
-    if uploaded_files:
-        image_data_list = []
-        images = [uploaded_file.read() for uploaded_file in uploaded_files]
-
-        for i, uploaded_file in enumerate(uploaded_files):
-            image_name = st.text_input(f'Enter image name for Image {i+1}', value=uploaded_file.name)
-            font_size = st.number_input(f'Overlay font size for Image {i+1}', min_value=1, value=20)
-            position = st.selectbox(f'Overlay position for Image {i+1}', ('bottom-left', 'bottom-right', 'top-left', 'top-right'))
-            text_color = st.color_picker(f'Text color for Image {i+1}', '#FFFFFF')
-
-            image_data_list.append({
-                'image_name': image_name,
-                'font_size': font_size,
-                'position': position,
-                'text_color': text_color
-            })
-
+    # Fetch data from website
+    data = fetch_data_from_website()
+    if data:
+        # Process data
+        image_data_list = data['image_data_list']
+        images = [base64.b64decode(image_data['image']) for image_data in image_data_list]
         images_with_overlay = add_image_overlay(images, image_data_list)
 
         for i, image_with_overlay in enumerate(images_with_overlay):
@@ -139,24 +134,10 @@ def main():
         st.json(image_data_list)
 
         st.subheader('History Data')
-        history_data = load_json_data()
+        history_data = st.session_state.get('json_data', [])
         for data in history_data:
             st.write(data)
 
-        api_link = "https://intern-omam.onrender.com/api/history"
-        st.subheader("API Endpoint")
-        st.write(api_link)
-
-        st.subheader('API Request')
-        st.info("Use the following cURL command in Postman to retrieve history data:")
-        st.code(f"GET {api_link}")
-
-        st.subheader('API Response')
-        st.info("Make a GET request to the API endpoint in Postman to see the response.")
-
-        st.subheader('Postman Command')
-        st.info("Use the following cURL command in Postman to post data to the API:")
-        st.code(f"POST {api_link} --header 'Content-Type: application/json' --data {json.dumps(image_data_list)}")
 
 if __name__ == '__main__':
     main()
