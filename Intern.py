@@ -1,9 +1,10 @@
-import streamlit as st
+# import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
 import base64
 import requests
+
 
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
@@ -158,5 +159,7 @@ def main():
         st.info("Use the following cURL command in Postman to post data to the API:")
         st.code(f"POST {api_link} --header 'Content-Type: application/json' --data {json.dumps(image_data_list)}")
 
+
 if __name__ == '__main__':
     main()
+
