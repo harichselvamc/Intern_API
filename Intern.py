@@ -147,22 +147,16 @@ def main():
         st.subheader("API Endpoint")
         st.write(api_link)
 
-        if st.button('Get History Data'):
-            response = requests.get(api_link)
-            if response.status_code == 200:
-                history_data = response.json()
-                if history_data:
-                    st.subheader('History Data (GET Request)')
-                    for data in history_data:
-                        st.write(data)
-                else:
-                    st.write("No history data available.")
-            else:
-                st.error('Error retrieving history data.')
+        st.subheader('API Request')
+        st.info("Use the following cURL command in Postman to retrieve history data:")
+        st.code(f"GET {api_link}")
 
-        st.subheader('Postman Command Preview')
-        postman_command = f'curl -X POST -H "Content-Type: application/json" -d \'{json.dumps(image_data_list)}\' {api_link}'
-        st.code(postman_command)
+        st.subheader('API Response')
+        st.info("Make a GET request to the API endpoint in Postman to see the response.")
+
+        st.subheader('Postman Command')
+        st.info("Use the following cURL command in Postman to post data to the API:")
+        st.code(f"POST {api_link} --header 'Content-Type: application/json' --data {json.dumps(image_data_list)}")
 
 if __name__ == '__main__':
     main()
