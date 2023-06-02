@@ -145,8 +145,7 @@ def main():
 
         st.subheader('History Data')
         history_data = fetch_data_from_history()
-        for data in history_data:
-            st.write(data)
+        st.json(history_data)
 
         api_link = "https://intern-omam.onrender.com/api/history"
         st.subheader("API Endpoint")
@@ -166,3 +165,9 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# Save history data to the Intern.py file
+history_data = fetch_data_from_history()
+with open('Intern.py', 'a') as file:
+    file.write('\n\n# History Data\n')
+    file.write('history_data = ' + json.dumps(history_data))
