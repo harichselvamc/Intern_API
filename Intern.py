@@ -2,21 +2,11 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
-from fastapi import FastAPI, Request
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import FastAPI
+import base64
+import uvicorn
 
 app = FastAPI()
-
-
-class StreamlitMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = '*'
-        return response
-
-
-app.add_middleware(StreamlitMiddleware)
 
 
 def add_image_overlay(images, image_data_list):
@@ -107,8 +97,7 @@ def main():
         for i, uploaded_file in enumerate(uploaded_files):
             image_name = st.text_input(f'Enter image name for Image {i+1}', value=uploaded_file.name)
             font_size = st.number_input(f'Overlay font size for Image {i+1}', min_value=1, value=20)
-            position = st.selectbox(f'Overlay position for Image {i+1}',
-                                    ('bottom-left', 'bottom-right', 'top-left', 'top-right'))
+            position = st.selectbox(f'Overlay position for Image {i+1}', ('bottom-left', 'bottom-right', 'top-left', 'top-right'))
             text_color = st.color_picker(f'Text color for Image {i+1}', '#FFFFFF')
 
             image_data_list.append({
@@ -175,4 +164,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if st._is_running_with_streamlit:
+        main()
+    else:
+        uvicorn.run(app, host='0.0.0.0', port=8000)
