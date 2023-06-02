@@ -79,8 +79,12 @@ def fetch_data_from_website():
     url = 'https://intern-omam.onrender.com/'
     response = requests.get(url)
     if response.status_code == 200:
-        data = response.json()
-        return data
+        try:
+            data = response.json()
+            return data
+        except json.JSONDecodeError:
+            st.error('Invalid JSON response from the website')
+            return None
     else:
         st.error('Failed to fetch data from the website')
         return None
@@ -139,7 +143,8 @@ def main():
 
         st.subheader('History Data')
         history_data = load_json_data()
-        st.write(history_data)
+        for data in history_data:
+            st.write(data)
 
 
 if __name__ == '__main__':
