@@ -77,12 +77,11 @@ def save_to_history(data):
 
 def fetch_data_from_website():
     url = 'https://intern-omam.onrender.com/'
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
+    response = requests.get(url)
+    if response.status_code == 200:
         data = response.json()
         return data
-    except (requests.exceptions.RequestException, json.JSONDecodeError):
+    else:
         st.error('Failed to fetch data from the website')
         return None
 
