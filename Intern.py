@@ -706,13 +706,10 @@
 # if __name__ == '__main__':
 #     main()
 
-
-
-from flask import Flask, jsonify, send_file
+from flask import Flask, render_template, request, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
-import base64
 import requests
 
 app = Flask(__name__)
@@ -787,75 +784,74 @@ def save_to_history(data):
     return {"message": "Data saved to history.json"}
 
 
+def fetch_from_history():
+    response = requests.get("https://intern-omam.onrender.com/history.json")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return []
+
+
 @app.route('/')
-def home():
-    return 'Image Overlay API'
+def index():
+    return render_template('index.html')
 
 
-@app.route('/overlay', methods=['POST'])
-def overlay_images():
-    uploaded_files = request.files.getlist('images')
-    if uploaded_files:
-        image_data_list = []
-        images = [uploaded_file.read() for uploaded_file in uploaded_files]
+@app.route('/upload', methods=['POST'])
+def upload():
+    image_data_list = []
+    images = []
+    for i in range(1, 6):
+        if f'image{i}' in request.files:
+            uploaded_file = request.files[f'image{i}']
+            image_data = {
+                'image_name': request.form.get(f'image_name{i}'),
+                'font_size': int(request.form.get(f'font_size{i}')),
+                'position': request.form.get(f'position{i}'),
+                'text_color': request.form.get(f'text_color{i}')
+            }
+            image_data_list.append(image_data)
+            images.append(uploaded_file.read())
 
-        for i, uploaded_file in enumerate(uploaded_files):
-            image_name = request.form.get(f'image_name_{i+1}', value=uploaded_file.filename)
-            font_size = int(request.form.get(f'font_size_{i+1}', 20))
-            position = request.form.get(f'position_{i+1}', 'bottom-left')
-            text_color = request.form.get(f'text_color_{i+1}', '#FFFFFF')
+    images_with_overlay = add_image_overlay(images, image_data_list)
 
-            image_data_list.append({
-                'image_name': image_name,
-                'font_size': font_size,
-                'position': position,
-                'text_color': text_color
-            })
+    resized_images_with_overlay = []
+    for i, image_with_overlay in enumerate(images_with_overlay):
+        if f'resize_checkbox{i+1}' in request.form:
+            image_size = request.form.get(f'image_size{i+1}')
+            if image_size == "Default":
+                resized_image_with_overlay = image_with_overlay
+                altered_size = "Default"
+            else:
+                width, height = image_size.split("x")
+                width = int(width)
+                height = int(height)
+                resized_image_with_overlay = resize_image(image_with_overlay, (width, height))
+                altered_size = image_size
 
-        images_with_overlay = add_image_overlay(images, image_data_list)
+            resized_images_with_overlay.append(resized_image_with_overlay)
+            image_data_list[i]['altered_size'] = altered_size
 
-        for i, image_with_overlay in enumerate(images_with_overlay):
-            if request.form.get(f"resize_{i+1}"):
-                image_size = request.form.get(f"image_size_{i+1}", "Default")
+    for i, image_data in enumerate(image_data_list):
+        save_to_history(image_data)
 
-                if image_size == "Default":
-                    resized_image_with_overlay = image_with_overlay
-                    altered_size = "Default"
-                else:
-                    width, height = image_size.split("x")
-                    width = int(width)
-                    height = int(height)
-                    resized_image_with_overlay = resize_image(image_with_overlay, (width, height))
-                    altered_size = image_size
+    formatted_response = []
+    for image_data in image_data_list:
+        formatted_response.append({
+            'image_name': image_data['image_name'],
+            'font_size': image_data['font_size'],
+            'position': image_data['position'],
+            'text_color': image_data['text_color'],
+            'altered_size': image_data.get('altered_size', 'Default')
+        })
 
-                image_path = f"image_{i+1}.png"
-                resized_image_with_overlay.save(image_path, 'PNG')
-
-                image_data_list[i]['altered_size'] = altered_size
-
-        if request.form.get('save'):
-            for i, image_data in enumerate(image_data_list):
-                save_to_history(image_data)
-
-        formatted_response = []
-        for image_data in image_data_list:
-            formatted_response.append({
-                'image_name': image_data['image_name'],
-                'font_size': image_data['font_size'],
-                'position': image_data['position'],
-                'text_color': image_data['text_color'],
-                'altered_size': image_data.get('altered_size', 'Default')
-            })
-
-        return jsonify(formatted_response)
-
-    return 'No images uploaded'
+    return render_template('upload.html', images=resized_images_with_overlay, response=formatted_response)
 
 
-@app.route('/history.json')
-def get_history_data():
-    history_data = load_json_data()
-    return jsonify(history_data)
+@app.route('/history')
+def history():
+    history_data = fetch_from_history()
+    return render_template('history.html', history_data=history_data)
 
 
 if __name__ == '__main__':
