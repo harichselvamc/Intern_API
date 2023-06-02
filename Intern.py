@@ -44,12 +44,16 @@ def resize_image(image, size):
 
 
 def store_json_data(json_data):
-    # Retrieve existing data from Streamlit's user session state
-    existing_data = st.session_state.get('json_data', [])
-    existing_data.append(json_data)
+    with open('history.json', 'a') as file:
+        file.write(json_data + '\n')
 
-    # Update the user session state with the new data
-    st.session_state['json_data'] = existing_data
+
+def load_json_data():
+    data = []
+    with open('history.json', 'r') as file:
+        for line in file:
+            data.append(json.loads(line))
+    return data
 
 
 def save_to_history(data):
@@ -67,17 +71,18 @@ def save_to_history(data):
         'altered_size': altered_size
     }
 
-    store_json_data(image_data)
+    store_json_data(json.dumps(image_data))
     return {"message": "Data saved to history.json"}
 
 
 def fetch_data_from_website():
     url = 'https://intern-omam.onrender.com/'
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
         return data
-    else:
+    except (requests.exceptions.RequestException, json.JSONDecodeError):
         st.error('Failed to fetch data from the website')
         return None
 
@@ -134,7 +139,7 @@ def main():
         st.json(image_data_list)
 
         st.subheader('History Data')
-        history_data = st.session_state.get('json_data', [])
+        history_data = load_json_data()
         for data in history_data:
             st.write(data)
 
