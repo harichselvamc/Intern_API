@@ -2,12 +2,11 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
-from fastapi import FastAPI
 import base64
-import uvicorn
 
-app = FastAPI()
+from flask import Flask, jsonify, request
 
+app = Flask(__name__)
 
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
@@ -20,7 +19,7 @@ def add_image_overlay(images, image_data_list):
         font_size = image_data['font_size']
         position = image_data['position']
         text_color = image_data['text_color']
-        font = ImageFont.truetype('arial.ttf', font_size)
+        font = ImageFont.truetype('./arial.ttf', font_size)
 
         if position == 'bottom-left':
             x = 10
@@ -60,14 +59,7 @@ def load_json_data():
     return data
 
 
-@app.get("/history")
-def get_history():
-    history_data = load_json_data()
-    return history_data
-
-
-@app.post("/save")
-def save_to_history(data: dict):
+def save_to_history(data):
     image_name = data['image_name']
     font_size = data['font_size']
     position = data['position']
@@ -84,6 +76,40 @@ def save_to_history(data: dict):
 
     store_json_data(json.dumps(image_data))
     return {"message": "Data saved to history.json"}
+
+
+@app.route('/api/history', methods=['GET'])
+def get_history():
+    history_data = load_json_data()
+    return jsonify(history_data)
+
+
+@app.route('/api/image-overlay', methods=['POST'])
+def process_image_overlay():
+    uploaded_files = request.files.getlist('files')
+    image_data_list = json.loads(request.form.get('data'))
+
+    images = [uploaded_file.read() for uploaded_file in uploaded_files]
+    images_with_overlay = add_image_overlay(images, image_data_list)
+
+    response_data = []
+
+    for i, image_with_overlay in enumerate(images_with_overlay):
+        resized_image_with_overlay = resize_image(image_with_overlay, (800, 600))
+        image_path = f"image_{i+1}.png"
+        resized_image_with_overlay.save(image_path, 'PNG')
+
+        with open(image_path, 'rb') as file:
+            image_data = file.read()
+
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+
+        response_data.append({
+            'image_name': image_data_list[i]['image_name'],
+            'image': image_base64
+        })
+
+    return jsonify(response_data)
 
 
 def main():
@@ -154,17 +180,6 @@ def main():
         for data in history_data:
             st.write(data)
 
-        current_url = st.experimental_get_query_params()
-        query_params = []
-        for key, value in current_url.items():
-            query_params.append(f"{key}={value[0]}")
-        query_string = "&".join(query_params)
-        sharable_link = f"[Sharable Link](?{query_string})"
-        st.markdown(sharable_link)
-
 
 if __name__ == '__main__':
-    if st._is_running_with_streamlit:
-        main()
-    else:
-        uvicorn.run(app, host='0.0.0.0', port=8000)
+    main()
