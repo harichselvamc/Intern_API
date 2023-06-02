@@ -5,7 +5,6 @@ import json
 import base64
 import requests
 
-
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
 
@@ -76,6 +75,11 @@ def save_to_history(data):
     return {"message": "Data saved to history.json"}
 
 
+def fetch_data_from_history():
+    history_data = load_json_data()
+    return history_data
+
+
 def main():
     st.title('Image Overlay API')
 
@@ -140,7 +144,7 @@ def main():
         st.json(image_data_list)
 
         st.subheader('History Data')
-        history_data = load_json_data()
+        history_data = fetch_data_from_history()
         for data in history_data:
             st.write(data)
 
@@ -162,4 +166,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
