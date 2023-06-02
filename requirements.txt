@@ -2,5 +2,5 @@ Flask==2.2.2
 Pillow==9.5.0
 Requests==2.31.0
 streamlit==1.21.0
-fastapi==0.68.1
-starlette
+fastapi==0.70.0
+uvicorn==0.15.0
