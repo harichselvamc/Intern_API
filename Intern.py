@@ -2,8 +2,11 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
+from fastapi import FastAPI
 import base64
-import requests
+
+app = FastAPI()
+
 
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
@@ -16,7 +19,7 @@ def add_image_overlay(images, image_data_list):
         font_size = image_data['font_size']
         position = image_data['position']
         text_color = image_data['text_color']
-        font = ImageFont.truetype('./arial.ttf', font_size)
+        font = ImageFont.truetype('arial.ttf', font_size)
 
         if position == 'bottom-left':
             x = 10
@@ -56,7 +59,14 @@ def load_json_data():
     return data
 
 
-def save_to_history(data):
+@app.get("/history")
+def get_history():
+    history_data = load_json_data()
+    return history_data
+
+
+@app.post("/save")
+def save_to_history(data: dict):
     image_name = data['image_name']
     font_size = data['font_size']
     position = data['position']
@@ -75,30 +85,27 @@ def save_to_history(data):
     return {"message": "Data saved to history.json"}
 
 
-def fetch_data_from_website():
-    url = 'https://intern-omam.onrender.com/'
-    response = requests.get(url)
-    if response.status_code == 200:
-        try:
-            data = response.json()
-            return data
-        except json.JSONDecodeError:
-            st.error('Invalid JSON response from the website')
-            return None
-    else:
-        st.error('Failed to fetch data from the website')
-        return None
-
-
 def main():
     st.title('Image Overlay API')
 
-    # Fetch data from website
-    data = fetch_data_from_website()
-    if data:
-        # Process data
-        image_data_list = data['image_data_list']
-        images = [base64.b64decode(image_data['image']) for image_data in image_data_list]
+    uploaded_files = st.file_uploader('Upload images', type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+    if uploaded_files:
+        image_data_list = []
+        images = [uploaded_file.read() for uploaded_file in uploaded_files]
+
+        for i, uploaded_file in enumerate(uploaded_files):
+            image_name = st.text_input(f'Enter image name for Image {i+1}', value=uploaded_file.name)
+            font_size = st.number_input(f'Overlay font size for Image {i+1}', min_value=1, value=20)
+            position = st.selectbox(f'Overlay position for Image {i+1}', ('bottom-left', 'bottom-right', 'top-left', 'top-right'))
+            text_color = st.color_picker(f'Text color for Image {i+1}', '#FFFFFF')
+
+            image_data_list.append({
+                'image_name': image_name,
+                'font_size': font_size,
+                'position': position,
+                'text_color': text_color
+            })
+
         images_with_overlay = add_image_overlay(images, image_data_list)
 
         for i, image_with_overlay in enumerate(images_with_overlay):
@@ -145,6 +152,14 @@ def main():
         history_data = load_json_data()
         for data in history_data:
             st.write(data)
+
+        current_url = st.experimental_get_query_params()
+        query_params = []
+        for key, value in current_url.items():
+            query_params.append(f"{key}={value[0]}")
+        query_string = "&".join(query_params)
+        sharable_link = f"[Sharable Link](?{query_string})"
+        st.markdown(sharable_link)
 
 
 if __name__ == '__main__':
