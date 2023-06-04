@@ -413,6 +413,8 @@ import json
 import base64
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import FastAPI, UploadFile, Form
+import streamlit as st
+
 
 app = FastAPI()
 
