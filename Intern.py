@@ -3526,7 +3526,7 @@ import json
 import base64
 from flask import Flask, jsonify, request
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
