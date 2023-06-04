@@ -379,3 +379,4 @@
 streamlit
 Pillow
 Flask
+Flask-RESTful
