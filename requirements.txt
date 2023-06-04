@@ -2,4 +2,3 @@ fastapi
 Flask
 Pillow
 streamlit
-pyngrok
