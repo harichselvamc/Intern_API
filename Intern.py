@@ -3755,6 +3755,6 @@ def main():
         href = f'<a href="data:file/html;base64,{b64}" download="history.html">Click here to download history.html</a>'
         st.markdown(href, unsafe_allow_html=True)
 
+if __name__ == '__main__':
 
-if _name_ == '_main_':
     main()
