@@ -380,7 +380,12 @@
 # zope.interface==5.5.2
 
 
+# Flask==2.0.1
+# Flask-RESTful==0.3.9
+# Pillow==8.4.0
+# streamlit==0.88.0
 Flask==2.0.1
 Flask-RESTful==0.3.9
 Pillow==8.4.0
 streamlit==0.88.0
+pyngrok==5.1.0
