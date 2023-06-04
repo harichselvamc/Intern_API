@@ -3260,7 +3260,6 @@ def generate_html(history_data):
     
     return html
 
-
 def main():
     st.title('Image Overlay API')
 
@@ -3289,29 +3288,40 @@ def main():
                 unique_key = f"resize_select_{i}"
                 image_size = st.selectbox("Select Image Size", (
                     "Default", "1920x1080", "630x900", "720x1080", "900x1260",
-                    "1080x1440", "1440x1800", "1530x1980", "1800x2520", "1050x1500",
-                    "1200x1600", "1440x2000"
-                ), index=0, key=unique_key)
+                    "1080x1440", "1440x1800", "1530x1980", "1800x2520", "1050x1680"
+                ), key=unique_key)
                 if image_size != "Default":
-                    width, height = image_size.split("x")
-                    image_with_overlay = resize_image(image_with_overlay, (int(width), int(height)))
+                    width, height = map(int, image_size.split("x"))
+                    images_with_overlay[i] = resize_image(image_with_overlay, (width, height))
+                    st.image(images_with_overlay[i], caption=f"Resized Image {i+1}", use_column_width=True)
 
-            image_byte_array = io.BytesIO()
-            image_with_overlay.save(image_byte_array, format='PNG')
-            st.write('Download Image', i+1, 'with Overlay')
-            st.markdown(
-                f'<a href="data:image/png;base64,{base64.b64encode(image_byte_array.getvalue()).decode('utf-8')}" download="image_with_overlay_{i+1}.png">Click here</a>',
-                unsafe_allow_html=True
-            )
+        if st.button('Generate Overlay'):
+            response = requests.post('http://127.0.0.1:5000/overlay', files=[('images', image) for image in images], data=image_data_list)
+            response_data = response.json()
 
-    if st.button('Generate History Link'):
-        history_data = load_json_data()
-        html_content = generate_html(history_data)
+            for i, item in enumerate(response_data):
+                image_bytes = base64.b64decode(item['image'])
+                st.image(image_bytes, caption=f'Overlayed Image {i+1}', use_column_width=True)
+
+            st.success('Overlay images generated successfully!')
+
+    st.markdown('---')
+
+    if st.button('View History'):
+        response = requests.get('http://127.0.0.1:5000/history')
+        history_data = response.json()
+        html = generate_html(history_data)
+
         with open('history.html', 'w') as file:
-            file.write(html_content)
-        
-        public_url = ngrok.connect(port=5000).public_url
-        st.markdown(f'You can access the history data using this link: {public_url}/history.html')
+            file.write(html)
+
+        public_url = ngrok.connect(addr='5000')
+        st.write(f"History file hosted at: {public_url}/history.html")
+
+    if st.button('Clear History'):
+        with open('history.json', 'w') as file:
+            file.truncate(0)
+        st.success('History cleared successfully!')
 
 if __name__ == '__main__':
     main()
