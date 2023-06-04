@@ -1,3 +1,5 @@
-Flask
-Pillow==8.3.2
-Streamlit
+Flask==2.2.2
+Pillow==9.5.0
+Pillow==9.5.0
+streamlit==1.21.0
+~treamlit==1.16.0
