@@ -332,6 +332,7 @@ def generate_html(history_data):
     
     return html
 
+
 def view_history():
     with open('history.html', 'r') as file:
         history_html = file.read()
@@ -391,22 +392,17 @@ def main():
             st.success('Data saved to history.json')
 
     if st.button('View History'):
-        history_data = load_json_data()
-        history_html = generate_html(history_data)
-        st.write(history_html, unsafe_allow_html=True)
+        view_history()
 
     if st.button('Download History HTML'):
         history_data = load_json_data()
         history_html = generate_html(history_data)
-        b64 = base64.b64encode(history_html.encode()).decode()
+        with open('history.html', 'w') as file:
+            file.write(history_html)
+        with open('history.html', 'r') as file:
+            b64 = base64.b64encode(file.read().encode()).decode()
         href = f'<a href="data:text/html;base64,{b64}" download="history.html">Download history.html File</a>'
         st.markdown(href, unsafe_allow_html=True)
-
-    # if st.button('Add Me'):
-    #     st.write('Another page in HTML')
-    #     html
-    if st.button('View History'):
-     view_history()
 
 
 if __name__ == '__main__':
