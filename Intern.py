@@ -241,6 +241,10 @@ def add_image_overlay(images, image_data_list):
 def resize_image(image, size):
     width, height = size
     return image.resize((width, height), resample=Image.LANCZOS)
+def view_history_html():
+    with open('history.html', 'r') as file:
+        history_html = file.read()
+    st.markdown(history_html, unsafe_allow_html=True)
 
 
 def store_json_data(json_data):
@@ -341,6 +345,8 @@ def view_history():
 
 def main():
     st.title('Image Overlay API')
+    st.subheader('History HTML:')
+    view_history_html()
 
     uploaded_files = st.file_uploader('Upload images', type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
     if uploaded_files:
