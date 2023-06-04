@@ -2419,5 +2419,5 @@ def main():
         st.markdown(href, unsafe_allow_html=True)
 
 
-if _name_ == '_main_':
+if __name__ == '__main_)':
     main()
