@@ -1016,8 +1016,8 @@ def generate_html(history_data):
           <td>{font_color}</td>
           <td>{altered_size}</td>
           <td>
-            <a href="/api/history/{image_name}" target="_blank">View</a> | 
-            <a href="/api/history/{image_name}/edit" target="_blank">Edit</a> | 
+            <a href="/api/history/{image_name}" target="_blank">View</a> |
+            <a href="/api/history/{image_name}/edit" target="_blank">Edit</a> |
             <a href="/api/history/{image_name}/delete" target="_blank">Delete</a>
           </td>
         </tr>
@@ -1034,6 +1034,10 @@ def generate_html(history_data):
 
 
 def view_history():
+    history_data = load_json_data()
+    history_html = generate_html(history_data)
+    with open('history.html', 'w') as file:
+        file.write(history_html)
     with open('history.html', 'r') as file:
         history_html = file.read()
     st.write(history_html, unsafe_allow_html=True)
@@ -1092,28 +1096,32 @@ def create_image_overlay():
 
 def edit_image_overlay(image_name):
     history_data = load_json_data()
-    image_data = next((data for data in history_data if data['image_name'] == image_name), None)
+    image_data = None
+    for data in history_data:
+        if data['image_name'] == image_name:
+            image_data = data
+            break
 
-    if image_data:
-        font_size = image_data['font_size']
-        position = image_data['position']
-        font_color = image_data.get('font_color', 'white')
+    if image_data is None:
+        st.error(f"No history data found for image: {image_name}")
+        return
 
-        st.title(f'Edit Image Overlay - {image_name}')
+    st.header(f"Edit Image Overlay - {image_name}")
 
-        font_size = st.number_input('Overlay font size', min_value=1, value=font_size)
-        position = st.selectbox('Overlay position', ('bottom-left', 'bottom-right', 'top-left', 'top-right'), index=['bottom-left', 'bottom-right', 'top-left', 'top-right'].index(position))
-        font_color = st.color_picker('Font color', font_color)
+    font_size = st.number_input("Overlay font size", min_value=1, value=image_data['font_size'])
+    position = st.selectbox("Overlay position", ('bottom-left', 'bottom-right', 'top-left', 'top-right'), index=['bottom-left', 'bottom-right', 'top-left', 'top-right'].index(image_data['position']))
+    font_color = st.color_picker("Font color", image_data['font_color'])
 
-        image_data['font_size'] = font_size
-        image_data['position'] = position
-        image_data['font_color'] = font_color
+    image_data['font_size'] = font_size
+    image_data['position'] = position
+    image_data['font_color'] = font_color
 
-        st.success('Image overlay details updated.')
-
-        save_to_history(image_data)
-    else:
-        st.error('Image name not found in history.')
+    if st.button('Update Overlay'):
+        history_data = [data if data['image_name'] != image_name else image_data for data in history_data]
+        with open('history.json', 'w') as file:
+            for data in history_data:
+                file.write(json.dumps(data) + '\n')
+        st.success(f"Overlay updated for image: {image_name}")
 
 
 def delete_image_overlay(image_name):
@@ -1122,16 +1130,17 @@ def delete_image_overlay(image_name):
     with open('history.json', 'w') as file:
         for data in updated_history_data:
             file.write(json.dumps(data) + '\n')
-    st.success(f'Image overlay with name "{image_name}" deleted from history.')
+    st.success(f"Overlay deleted for image: {image_name}")
 
 
 def main():
     st.title('Image Overlay API')
 
-    options = st.sidebar.selectbox('Menu', ('Create Image Overlay', 'View History'))
-    if options == 'Create Image Overlay':
+    page = st.sidebar.selectbox("Select Page", ('Create Overlay', 'View History'))
+    
+    if page == 'Create Overlay':
         create_image_overlay()
-    elif options == 'View History':
+    elif page == 'View History':
         view_history()
 
 
