@@ -1762,6 +1762,8 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import json
 from fastapi import FastAPI
+from fastapi.middleware.wsgi import WSGIMiddleware
+from streamlit.report_thread import get_report_ctx
 
 app = FastAPI()
 
@@ -1894,6 +1896,16 @@ def generate_html(history_data):
     return html
 
 
+def get_history_data():
+    return load_json_data()
+
+
+def view_history():
+    history_data = get_history_data()
+    history_html = generate_html(history_data)
+    return {"history_html": history_html}
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -1932,14 +1944,14 @@ def save_to_history_endpoint(data_list: list):
 
 
 @app.get("/history")
-def view_history():
-    history_data = load_json_data()
+def get_history():
+    history_data = get_history_data()
     return {"history_data": history_data}
 
 
 @app.get("/history/html")
 def download_history_html():
-    history_data = load_json_data()
+    history_data = get_history_data()
     history_html = generate_html(history_data)
 
     return {"history_html": history_html}
@@ -1947,7 +1959,7 @@ def download_history_html():
 
 @app.get("/history/json")
 def download_history_json():
-    history_data = load_json_data()
+    history_data = get_history_data()
     history_json = json.dumps(history_data, indent=4)
 
     return {"history_json": history_json}
@@ -1971,5 +1983,8 @@ def main():
 
 
 if __name__ == '__main__':
-    st.write(__doc__)
-    app.mount("/", WSGIMiddleware(st._create_main_app()))
+    ctx = get_report_ctx()
+    if ctx is None:  # Running in a different app context, such as FastAPI
+        main()
+    else:  # Running in Streamlit app context
+        app.mount("/", WSGIMiddleware(st._create_main_app()))
