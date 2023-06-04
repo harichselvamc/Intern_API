@@ -332,6 +332,11 @@ def generate_html(history_data):
     
     return html
 
+def view_history():
+    with open('history.html', 'r') as file:
+        history_html = file.read()
+    st.write(history_html, unsafe_allow_html=True)
+
 
 def main():
     st.title('Image Overlay API')
@@ -397,8 +402,11 @@ def main():
         href = f'<a href="data:text/html;base64,{b64}" download="history.html">Download history.html File</a>'
         st.markdown(href, unsafe_allow_html=True)
 
-    if st.button('Add Me'):
-        st.write('Another page in HTML')
+    # if st.button('Add Me'):
+    #     st.write('Another page in HTML')
+    #     html
+    if st.button('View History'):
+     view_history()
 
 
 if __name__ == '__main__':
