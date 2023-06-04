@@ -2428,17 +2428,7 @@ def main():
         with open('history.json', 'r') as file:
             data = file.read()
         b64 = base64.b64encode(data.encode()).decode()
-        href = f'<a href="data:file/json;base64,{b64}" download="history.json">Download History JSON File</a>'
-        st.markdown(href, unsafe_allow_html=True)
-    if st.button('Download History as HTML'):
-        history_data = get_history_data()  # Retrieve the latest history data
-        history_html = generate_html(history_data)
-        with open('history.html', 'w') as file:
-            file.write(history_html)
-        with open('history.html', 'r') as file:
-            data = file.read()
-        b64 = base64.b64encode(data.encode()).decode()
-        href = f'<a href="data:file/html;base64,{b64}" download="history.html">Download History HTML File</a>'
+        href = f'<a href="data:file/json;base64,{b64}" download="history.json">Download JSON</a>'
         st.markdown(href, unsafe_allow_html=True)
 
 
