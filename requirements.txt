@@ -1,4 +1,5 @@
 fastapi
 Flask
 Pillow
-streamlit
+streamlit==0.89.0
+
