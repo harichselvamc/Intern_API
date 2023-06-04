@@ -1,6 +1,5 @@
-fastapi==0.96.0
-Flask==2.2.2
-Pillow==9.5.0
-
-streamlit==1.21.0
+fastapi
+Flask
+Pillow
+streamlit=
 
