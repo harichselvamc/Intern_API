@@ -5138,7 +5138,7 @@ import json
 import base64
 from flask import Flask, jsonify, request
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 def add_image_overlay(images, image_data_list):
     images_with_overlay = []
@@ -5367,5 +5367,5 @@ def main():
         st.markdown(href, unsafe_allow_html=True)
 
 
-if _name_ == '_main_':
+if __name__ == '_main_':
     main()
